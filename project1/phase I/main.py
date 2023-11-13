@@ -32,7 +32,7 @@ def calculate_possibilities(password, char_set):
 
     end_time = time.time()
 
-    calculation_time = (end_time - start_time) / num_iterations
+    calculation_time = (end_time - start_time)
 
     password_count = len(characters) ** length
 
@@ -66,7 +66,7 @@ def calculate_possibilities_first_char(length, first_char, char_set, password):
 
     end_time = time.time()
 
-    calculation_time = (end_time - start_time) / num_iterations
+    calculation_time = (end_time - start_time)
 
     password_count = len(characters) ** (length - 1)
 
@@ -100,7 +100,7 @@ def calculate_possibilities_partial(length, k, partial, char_set, password):
 
     end_time = time.time()
 
-    calculation_time = (end_time - start_time) / num_iterations
+    calculation_time = (end_time - start_time)
 
     password_count = len(characters) ** (length - k)
 
