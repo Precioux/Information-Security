@@ -3,7 +3,9 @@ import string
 import time
 
 
-def calculate_possibilities(length, char_set, num_iterations=10000):
+def calculate_possibilities(password, char_set):
+    length = len(password)
+
     if char_set == 1:
         characters = string.digits  # Only numbers
     elif char_set == 2:
@@ -16,8 +18,17 @@ def calculate_possibilities(length, char_set, num_iterations=10000):
 
     start_time = time.time()
 
-    for _ in range(num_iterations):
-        random_password = ''.join(random.choice(characters) for _ in range(length))
+    found = False
+    num_iterations = 0
+
+    while not found:
+        num_iterations += 1
+        random_guess = ''.join(random.choice(characters) for _ in range(length))
+        print(f"Trying password: {random_guess}")
+
+        if random_guess == password:
+            found = True
+            print(f"Found the password: {password}")
 
     end_time = time.time()
 
@@ -28,25 +39,7 @@ def calculate_possibilities(length, char_set, num_iterations=10000):
     return password_count, calculation_time
 
 
-def standard_mode():
-    try:
-        password_length = int(input("Enter the length of the password: "))
-        char_set = int(input("Enter the character set (1 for numbers, 2 for lowercase letters, 3 for both): "))
-
-        if password_length <= 0:
-            print("Please enter a positive integer for the password length.")
-            return
-
-        possibilities, calculation_time = calculate_possibilities(password_length, char_set, num_iterations=10000)
-
-        if possibilities is not None:
-            print(f"Number of password possibilities: {possibilities}")
-            print(f"Estimated calculation time: {calculation_time:.10f} seconds")
-    except ValueError:
-        print("Invalid input. Please enter valid integers.")
-
-
-def calculate_possibilities_first_char(length, first_char, char_set, num_iterations=10000):
+def calculate_possibilities_first_char(length, first_char, char_set, password):
     if char_set == 1:
         characters = string.digits  # Only numbers
     elif char_set == 2:
@@ -59,8 +52,17 @@ def calculate_possibilities_first_char(length, first_char, char_set, num_iterati
 
     start_time = time.time()
 
-    for _ in range(num_iterations):
+    found = False
+    num_iterations = 0
+
+    while not found:
+        num_iterations += 1
         random_password = first_char + ''.join(random.choice(characters) for _ in range(length - 1))
+        print(f"Trying password: {random_password}")
+
+        if random_password == password:
+            found = True
+            print(f"Found the password: {password}")
 
     end_time = time.time()
 
@@ -71,27 +73,7 @@ def calculate_possibilities_first_char(length, first_char, char_set, num_iterati
     return password_count, calculation_time
 
 
-def first_char_mode():
-    try:
-        password_length = int(input("Enter the length of the password: "))
-        first_char = input("Enter the first character of the password: ")
-        char_set = int(input("Enter the character set (1 for numbers, 2 for lowercase letters, 3 for both): "))
-
-        if password_length <= 1:
-            print("Please enter a password length greater than 1.")
-            return
-
-        possibilities, calculation_time = calculate_possibilities_first_char(password_length, first_char, char_set,
-                                                                             num_iterations=10000)
-
-        if possibilities is not None:
-            print(f"Number of password possibilities: {possibilities}")
-            print(f"Estimated calculation time: {calculation_time:.10f} seconds")
-    except ValueError:
-        print("Invalid input. Please enter valid integers.")
-
-
-def calculate_possibilities_partial(length, k, partial, char_set, num_iterations=10000):
+def calculate_possibilities_partial(length, k, partial, char_set, password):
     if char_set == 1:
         characters = string.digits  # Only numbers
     elif char_set == 2:
@@ -104,8 +86,17 @@ def calculate_possibilities_partial(length, k, partial, char_set, num_iterations
 
     start_time = time.time()
 
-    for _ in range(num_iterations):
+    found = False
+    num_iterations = 0
+
+    while not found:
+        num_iterations += 1
         random_password = partial + ''.join(random.choice(characters) for _ in range(length - k))
+        print(f"Trying password: {random_password}")
+
+        if random_password == password:
+            found = True
+            print(f"Found the password: {password}")
 
     end_time = time.time()
 
@@ -116,37 +107,53 @@ def calculate_possibilities_partial(length, k, partial, char_set, num_iterations
     return password_count, calculation_time
 
 
-def partial_mode():
-    try:
-        password_length = int(input("Enter the length of the password: "))
-        k = int(input("Enter the value of k (number of characters to reveal): "))
-        partial = input(f"Enter {k} characters of the password: ")
-        char_set = int(input("Enter the character set (1 for numbers, 2 for lowercase letters, 3 for both): "))
+def standard_mode(password):
+    char_set = int(input("Enter the character set (1 for numbers, 2 for lowercase letters, 3 for both): "))
 
-        if k <= 0 or k >= password_length:
-            print("Please enter a valid value for k.")
-            return
+    possibilities, calculation_time = calculate_possibilities(password, char_set)
 
-        possibilities, calculation_time = calculate_possibilities_partial(password_length, k, partial, char_set,
-                                                                         num_iterations=10000)
+    if possibilities is not None:
+        print(f"Number of password possibilities: {possibilities}")
+        print(f"Estimated calculation time: {calculation_time:.10f} seconds")
 
-        if possibilities is not None:
-            print(f"Number of password possibilities: {possibilities}")
-            print(f"Estimated calculation time: {calculation_time:.10f} seconds")
-    except ValueError:
-        print("Invalid input. Please enter valid integers.")
+
+def first_char_mode(password):
+    length = len(password)
+    first_char = password[0]
+    char_set = int(input("Enter the character set (1 for numbers, 2 for lowercase letters, 3 for both): "))
+
+    possibilities, calculation_time = calculate_possibilities_first_char(length, first_char, char_set, password)
+
+    if possibilities is not None:
+        print(f"Number of password possibilities: {possibilities}")
+        print(f"Estimated calculation time: {calculation_time:.10f} seconds")
+
+
+def partial_mode(password):
+    length = len(password)
+    k = int(input("Enter the value of k (number of characters to reveal): "))
+    partial = password[:k]
+    char_set = int(input("Enter the character set (1 for numbers, 2 for lowercase letters, 3 for both): "))
+
+    possibilities, calculation_time = calculate_possibilities_partial(length, k, partial, char_set, password)
+
+    if possibilities is not None:
+        print(f"Number of password possibilities: {possibilities}")
+        print(f"Estimated calculation time: {calculation_time:.10f} seconds")
 
 
 def main():
+    password = input("Enter the password: ")
+
     try:
         mode = int(input("Enter the mode (1 for standard, 2 for first char, 3 for partial): "))
 
         if mode == 1:
-            standard_mode()
+            standard_mode(password)
         elif mode == 2:
-            first_char_mode()
+            first_char_mode(password)
         elif mode == 3:
-            partial_mode()
+            partial_mode(password)
         else:
             print("Invalid mode. Please enter 1, 2, or 3.")
     except ValueError:
