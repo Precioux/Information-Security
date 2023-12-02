@@ -1,0 +1,10 @@
+=== Network Scan Report ===
+
+
+Active Machines:
+
+Open Ports:
+- Port 80 (TCP) is open
+- Port 443 (TCP) is open
+
+Identified Services:
