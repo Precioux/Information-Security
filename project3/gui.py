@@ -1,4 +1,3 @@
-# Step 1: Import necessary libraries
 import argparse
 from Crypto.Cipher import AES
 import base64
@@ -7,12 +6,12 @@ import hashlib
 import random
 import string
 import os
+import binascii  # Add this line to import the binascii module
+from tkinter import *
+from tkinter import messagebox
 global key
 
-# Global variable to store the key
-global key
-
-# Step 2: Parse command-line arguments
+# Parse command-line arguments
 parser = argparse.ArgumentParser(description="Password Manager")
 parser.add_argument("--newpass", help="Create a new password", nargs=3)
 parser.add_argument("--showpass", help="Show saved passwords")
@@ -21,7 +20,7 @@ parser.add_argument("--update", help="Update a password", nargs=2)
 parser.add_argument("--delete", help="Delete a password by name", nargs=2)
 args = parser.parse_args()
 
-# Step 3: Implement functions
+
 def xor_encrypt(data, key):
     # Convert data and key to bytes
     data_bytes = data.encode()
@@ -57,7 +56,12 @@ def decrypt(encrypted_text, key):
 
 
 def xor_decrypt(data, key):
-    encrypted_bytes = base64.b64decode(data)
+    try:
+        encrypted_bytes = base64.b64decode(data)
+    except binascii.Error:
+        print("Invalid base64-encoded string")
+        return ""
+
     key_bytes = key.encode()
 
     # Repeat the key to match the length of data
@@ -72,6 +76,7 @@ def xor_decrypt(data, key):
     decrypted_data = decrypted_bytes.decode()
 
     return decrypted_data
+
 
 
 # Step 4: Manage passwords
@@ -173,38 +178,131 @@ def delete_password(name):
                 file.write(json.dumps(entry) + "\n")
 
 
-# Step 5: Handle command-line arguments
+# Handle command-line arguments
 if args.newpass:
     name, comment, key = args.newpass
     if os.path.exists(passwords_file):
         decrypt_passwords_file(key)
     enc = save_password(name, comment, key)
-    print('New Password added!')
-    print(f'Encrypted Password : {enc}')
     encrypt_passwords_file()
+    messagebox.showinfo("Password Manager", f"New Password added!\nEncrypted Password: {enc}")
 
 elif args.showpass:
     key = args.showpass
     decrypt_passwords_file(key)
-    print('Showing Passwords..')
     show_passwords()
     encrypt_passwords_file()
+
 elif args.sel:
     name, key = args.sel
     decrypt_passwords_file(key)
-    print('Related data: ')
     select_password(name)
     encrypt_passwords_file()
+
 elif args.update:
     name, key = args.update
     decrypt_passwords_file(key)
     update_password(name)
     encrypt_passwords_file()
+
 elif args.delete:
     name, key = args.delete
     decrypt_passwords_file(key)
     delete_password(name)
     encrypt_passwords_file()
-    print('Deleted Successfully!')
+    messagebox.showinfo("Password Manager", "Password deleted successfully!")
+
 else:
-    print("Invalid command. Please use --help for usage information.")
+    # GUI
+    # GUI
+    def new_pass():
+        name = name_entry.get()
+        comment = comment_entry.get()
+        key = key_entry.get()
+
+        if not name or not comment or not key:
+            messagebox.showerror("Error", "All fields must be filled!")
+            return
+
+        generated_password = generate_password(name, comment, key)
+        encrypted_password = encrypt(generated_password, key)
+        entry = {"name": name, "password": encrypted_password, "comment": comment, "key": key}
+
+        with open(passwords_file, "a") as file:
+            file.write(json.dumps(entry) + "\n")
+
+        messagebox.showinfo("Password Manager", f"New Password added!\nEncrypted Password: {encrypted_password}")
+
+
+    def show_pass():
+        key = key_entry.get()
+        print("Key obtained from entry:", key)
+
+        decrypt_passwords_file(key)
+
+        print("Key after decryption:", key)
+
+        show_passwords()
+        encrypt_passwords_file()
+
+
+    def select_pass():
+        key = key_entry.get()
+        decrypt_passwords_file(key)
+        select_password(name_entry.get())
+        encrypt_passwords_file()
+
+
+    def update_pass():
+        key = key_entry.get()
+        decrypt_passwords_file(key)
+        update_password(name_entry.get())
+        encrypt_passwords_file()
+        messagebox.showinfo("Password Manager", "Password updated successfully!")
+
+
+    def delete_pass():
+        key = key_entry.get()
+        decrypt_passwords_file(key)
+        delete_password(name_entry.get())
+        encrypt_passwords_file()
+        messagebox.showinfo("Password Manager", "Password deleted successfully!")
+
+
+    window = Tk()
+    window.title("Password Manager")
+
+    name_label = Label(window, text="Name:")
+    name_label.grid(row=0, column=0, padx=10, pady=5, sticky=W)
+
+    name_entry = Entry(window)
+    name_entry.grid(row=0, column=1, padx=10, pady=5, sticky=W)
+
+    comment_label = Label(window, text="Comment:")
+    comment_label.grid(row=1, column=0, padx=10, pady=5, sticky=W)
+
+    comment_entry = Entry(window)
+    comment_entry.grid(row=1, column=1, padx=10, pady=5, sticky=W)
+
+    key_label = Label(window, text="Key:")
+    key_label.grid(row=2, column=0, padx=10, pady=5, sticky=W)
+
+    key_entry = Entry(window)
+    key_entry.grid(row=2, column=1, padx=10, pady=5, sticky=W)
+
+    new_button = Button(window, text="New Password", command=new_pass)
+    new_button.grid(row=3, column=0, padx=10, pady=10, sticky=W)
+
+    show_button = Button(window, text="Show Passwords", command=show_pass)
+    show_button.grid(row=3, column=1, padx=10, pady=10, sticky=W)
+
+    select_button = Button(window, text="Select Password", command=select_pass)
+    select_button.grid(row=4, column=0, padx=10, pady=10, sticky=W)
+
+    update_button = Button(window, text="Update Password", command=update_pass)
+    update_button.grid(row=4, column=1, padx=10, pady=10, sticky=W)
+
+    delete_button = Button(window, text="Delete Password", command=delete_pass)
+    delete_button.grid(row=5, column=0, padx=10, pady=10, sticky=W)
+
+    window.mainloop()

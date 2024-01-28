@@ -68,7 +68,7 @@ class StatsGen:
 
         # Detect simple and advanced masks
         for letter in password:
- 
+
             if letter in string.digits:
                 digit += 1
                 advancedmask_string += "?d"
@@ -128,7 +128,7 @@ class StatsGen:
 
                 if len(password) == 0: continue
 
-                self.total_counter += 1  
+                self.total_counter += 1
 
                 (pass_length,characterset,simplemask,advancedmask, policy) = self.analyze_password(password)
                 (digit,lower,upper,special) = policy
@@ -218,7 +218,7 @@ if __name__ == "__main__":
     header += "     |_| iphelix@thesprawl.org\n"
     header += "\n"
 
-    parser = OptionParser("%prog [options] passwords.txt\n\nType --help for more options", version="%prog "+VERSION)
+    parser = OptionParser("%prog [options] test.txt\n\nType --help for more options", version="%prog "+VERSION)
 
     filters = OptionGroup(parser, "Password Filters")
     filters.add_option("--minlength", dest="minlength", type="int", metavar="8", help="Minimum password length")

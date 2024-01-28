@@ -75,18 +75,22 @@ def xor_decrypt(data, key):
 
 
 # Step 4: Manage passwords
-passwords_file = "passwords.txt"
+passwords_file = "passwordsPlus.txt"
 
 
 def generate_password(name, comment, key):
     # Generating a random salt
     salt = ''.join(random.choices(string.ascii_letters + string.digits, k=16))
 
-    # Combining name, comment, key, and salt for password generation
+    # Generating a random password length between 8 and 20 characters
+    password_length = random.randint(8, 20)
+
+    # Generating a random password with the specified length
     password_input = f"{name}_{comment}_{key}_{salt}"
-    generated_password = hashlib.sha256(password_input.encode()).hexdigest()
+    generated_password = hashlib.sha256(password_input.encode()).hexdigest()[:password_length]
 
     return generated_password
+
 
 
 def save_password(name, comment, key):
