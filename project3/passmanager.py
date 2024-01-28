@@ -6,13 +6,13 @@ import json
 import hashlib
 import random
 import string
-
+global key
 # Step 2: Parse command-line arguments
 parser = argparse.ArgumentParser(description="Password Manager")
 parser.add_argument("--newpass", help="Create a new password", nargs=3)
 parser.add_argument("--showpass", action="store_true", help="Show saved passwords")
 parser.add_argument("--sel", help="Select a password by name")
-parser.add_argument("--update", help="Update a password", nargs=2)
+parser.add_argument("--update", help="Update a password", nargs=1)
 parser.add_argument("--delete", help="Delete a password by name")
 args = parser.parse_args()
 
@@ -59,7 +59,7 @@ def save_password(name, comment, key):
     generated_password = generate_password(name, comment, key)
     encrypted_password = encrypt(generated_password, key)
     with open(passwords_file, "a") as file:
-        entry = {"name": name, "password": encrypted_password, "comment": comment}
+        entry = {"name": name, "password": encrypted_password, "comment": comment, "key": key}
         file.write(json.dumps(entry) + "\n")
     return encrypted_password
 
@@ -83,14 +83,35 @@ def select_password(name):
                 break
 
 
-def update_password(name, new_password, key):
+def update_password(name):
+    global key  # You may want to handle the key in a more secure way
     with open(passwords_file, "r") as file:
         entries = [json.loads(line) for line in file]
+
+    updated_entries = []
+    updated_password = None
+
+    for entry in entries:
+        if entry["name"] == name:
+            # Generate a new password for the existing entry
+            new_generated_password = generate_password(entry["name"], entry["comment"], entry["key"])
+            updated_password = encrypt(new_generated_password, entry["key"])
+
+            # Update the password field in the entry
+            entry["password"] = updated_password
+
+        updated_entries.append(entry)
+
     with open(passwords_file, "w") as file:
-        for entry in entries:
-            if entry["name"] == name:
-                entry["password"] = encrypt(new_password, key)
+        for entry in updated_entries:
             file.write(json.dumps(entry) + "\n")
+
+    if updated_password:
+        print(f"Password for '{name}' updated!")
+        print(f'New Encrypted Password: {updated_password}')
+    else:
+        print(f"Password for '{name}' not found.")
+
 
 
 def delete_password(name):
@@ -104,6 +125,7 @@ def delete_password(name):
 
 # Step 5: Handle command-line arguments
 if args.newpass:
+    global key
     name, comment, key = args.newpass
     encrypted_password = save_password(name, comment, key)
     print('New Password added!')
@@ -116,10 +138,8 @@ elif args.sel:
     print('Related data: ')
     select_password(name)
 elif args.update:
-    name, key = args.update
-    new_password = input("Enter the new password: ")
-    key = derive_key(key)
-    update_password(name, new_password, key)
+    name = args.update
+    update_password(name[0])
 elif args.delete:
     name = args.delete
     delete_password(name)
