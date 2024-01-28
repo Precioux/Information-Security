@@ -6,7 +6,7 @@ import json
 import hashlib
 import random
 import string
-
+import os
 global key
 
 # Global variable to store the key
@@ -18,7 +18,7 @@ parser.add_argument("--newpass", help="Create a new password", nargs=3)
 parser.add_argument("--showpass", help="Show saved passwords")
 parser.add_argument("--sel", help="Select a password by name", nargs=2)
 parser.add_argument("--update", help="Update a password", nargs=2)
-parser.add_argument("--delete", help="Delete a password by name")
+parser.add_argument("--delete", help="Delete a password by name", nargs=2)
 args = parser.parse_args()
 
 
@@ -69,7 +69,7 @@ def xor_decrypt(data, key):
     decrypted_bytes = bytes(
         [encrypted_byte ^ key_byte for encrypted_byte, key_byte in zip(encrypted_bytes, repeated_key)])
 
-    # # Print debugging output
+    # # # Print debugging output
     # print("Encrypted Bytes:", encrypted_bytes)
     # print("Repeating Key:", repeated_key)
     # print("Decrypted Bytes:", decrypted_bytes)
@@ -128,9 +128,9 @@ def decrypt_passwords_file(key):
     # print("Decrypted Content:")
     # print(decrypted_data)
 
-    # # Write decrypted content to another file for comparison (optional)
-    # with open("decrypted_passwords.txt", "w") as decrypted_file:
-    #     decrypted_file.write(decrypted_data)
+    # Write decrypted content to another file for comparison (optional)
+    with open("decrypted_passwords.txt", "w") as decrypted_file:
+        decrypted_file.write(decrypted_data)
     #
     with open(passwords_file, "w") as file:
         file.write(decrypted_data)
@@ -193,6 +193,8 @@ def delete_password(name):
 # Step 5: Handle command-line arguments
 if args.newpass:
     name, comment, key = args.newpass
+    if os.path.exists(passwords_file):
+        decrypt_passwords_file(key)
     enc = save_password(name, comment, key)
     print('New Password added!')
     print(f'Encrypted Password : {enc}')
@@ -211,12 +213,13 @@ elif args.sel:
     select_password(name)
     encrypt_passwords_file()
 elif args.update:
-    name,key = args.update
+    name, key = args.update
     decrypt_passwords_file(key)
     update_password(name)
     encrypt_passwords_file()
 elif args.delete:
-    name = args.delete
+    name, key = args.delete
+    decrypt_passwords_file(key)
     delete_password(name)
     encrypt_passwords_file()
     print('Deleted Successfully!')
