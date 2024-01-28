@@ -143,5 +143,6 @@ elif args.update:
 elif args.delete:
     name = args.delete
     delete_password(name)
+    print('Deleted Successfully!')
 else:
     print("Invalid command. Please use --help for usage information.")
