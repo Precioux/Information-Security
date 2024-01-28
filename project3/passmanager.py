@@ -56,14 +56,12 @@ def show_passwords():
             print(f"Name: {name}, Password: {decrypted_password}, Comment: {comment}")
 
 
-def select_password(name, key):
+def select_password(name):
     with open(passwords_file, "r") as file:
         for line in file:
             entry = json.loads(line)
             if entry["name"] == name:
-                decrypted_password = decrypt(entry["password"], key)
-                comment = entry["comment"]
-                print(f"Name: {name}, Password: {decrypted_password}, Comment: {comment}")
+                print(f"Password: {entry['password']}, Comment: {entry['comment']}")
                 break
 
 
@@ -97,9 +95,9 @@ elif args.showpass:
     print('Showing Passwords..')
     show_passwords()
 elif args.sel:
-    name, key = args.sel, input("Enter your simple password: ")
-    key = derive_key(key)
-    select_password(name, key)
+    name = args.sel
+    print('Related data: ')
+    select_password(name)
 elif args.update:
     name, key = args.update
     new_password = input("Enter the new password: ")
