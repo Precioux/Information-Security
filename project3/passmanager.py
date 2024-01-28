@@ -4,10 +4,12 @@ from Crypto.Cipher import AES
 import base64
 import json
 import hashlib
+import random
+import string
 
 # Step 2: Parse command-line arguments
 parser = argparse.ArgumentParser(description="Password Manager")
-parser.add_argument("--newpass", help="Create a new password", nargs=4)
+parser.add_argument("--newpass", help="Create a new password", nargs=3)
 parser.add_argument("--showpass", action="store_true", help="Show saved passwords")
 parser.add_argument("--sel", help="Select a password by name")
 parser.add_argument("--update", help="Update a password", nargs=2)
@@ -22,6 +24,7 @@ def derive_key(password, salt=b'some_salt', iterations=100000, key_length=32):
 
 
 def encrypt(text, key):
+    key = derive_key(key)
     cipher = AES.new(key, AES.MODE_EAX)
     ciphertext, tag = cipher.encrypt_and_digest(text.encode())
     return base64.b64encode(cipher.nonce + tag + ciphertext).decode()
@@ -38,8 +41,23 @@ def decrypt(encrypted_text, key):
 passwords_file = "passwords.txt"
 
 
-def save_password(name, password, comment, key):
-    encrypted_password = encrypt(password, key)
+def generate_password(name, comment, key):
+    # Generating a random salt
+    salt = ''.join(random.choices(string.ascii_letters + string.digits, k=16))
+
+    # Combining name, comment, key, and salt for password generation
+    password_input = f"{name}_{comment}_{key}_{salt}"
+
+    # You might want to implement a stronger password generation logic
+    # Here, I'm just using the input directly, but you can use libraries
+    # like 'secrets' to generate a more secure password.
+    generated_password = hashlib.sha256(password_input.encode()).hexdigest()
+
+    return generated_password
+
+def save_password(name, comment, key):
+    generated_password = generate_password(name, comment, key)
+    encrypted_password = encrypt(generated_password, key)
     with open(passwords_file, "a") as file:
         entry = {"name": name, "password": encrypted_password, "comment": comment}
         file.write(json.dumps(entry) + "\n")
@@ -86,9 +104,8 @@ def delete_password(name):
 
 # Step 5: Handle command-line arguments
 if args.newpass:
-    name, comment, password, key = args.newpass
-    new_key = derive_key(key)
-    encrypted_password = save_password(name, password, comment, new_key)
+    name, comment, key = args.newpass
+    encrypted_password = save_password(name, comment, key)
     print('New Password added!')
     print(f'Encrypted Password: {encrypted_password}')
 elif args.showpass:
