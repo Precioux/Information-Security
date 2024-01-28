@@ -6,6 +6,7 @@ import json
 import hashlib
 import random
 import string
+
 global key
 
 # Global variable to store the key
@@ -14,11 +15,12 @@ global key
 # Step 2: Parse command-line arguments
 parser = argparse.ArgumentParser(description="Password Manager")
 parser.add_argument("--newpass", help="Create a new password", nargs=3)
-parser.add_argument("--showpass",  help="Show saved passwords")
-parser.add_argument("--sel", help="Select a password by name")
+parser.add_argument("--showpass", help="Show saved passwords")
+parser.add_argument("--sel", help="Select a password by name", nargs=2)
 parser.add_argument("--update", help="Update a password", nargs=1)
 parser.add_argument("--delete", help="Delete a password by name")
 args = parser.parse_args()
+
 
 def xor_encrypt(data, key):
     # Convert data and key to bytes
@@ -34,10 +36,12 @@ def xor_encrypt(data, key):
     # Encode the result as base64 for storage
     return base64.b64encode(encrypted_bytes).decode()
 
+
 # Step 3: Define functions for encryption and decryption
 def derive_key(password, salt=b'some_salt', iterations=100000, key_length=32):
     key = hashlib.pbkdf2_hmac('sha256', password.encode(), salt, iterations, key_length)
     return key
+
 
 def encrypt(text, key):
     key = derive_key(key)
@@ -50,8 +54,7 @@ def decrypt(encrypted_text, key):
     data = base64.b64decode(encrypted_text.encode())
     nonce, tag, ciphertext = data[:16], data[16:32], data[32:]
     cipher = AES.new(key, AES.MODE_EAX, nonce=nonce)
-    return cipher.decrypt_and_verify(ciphertext, tag).decode()\
-
+    return cipher.decrypt_and_verify(ciphertext, tag).decode()
 
 
 def xor_decrypt(data, key):
@@ -98,7 +101,7 @@ def generate_password(name, comment, key):
 
 def save_password(name, comment, key):
     generated_password = generate_password(name, comment, key)
-    encrypted_password = encrypt(generated_password,key)
+    encrypted_password = encrypt(generated_password, key)
     entry = {"name": name, "password": encrypted_password, "comment": comment, "key": key}
     with open(passwords_file, "a") as file:
         file.write(json.dumps(entry) + "\n")
@@ -113,6 +116,7 @@ def encrypt_passwords_file():
     encrypted_data = xor_encrypt(plaintext, key)
     with open(passwords_file, "w") as file:
         file.write(encrypted_data)
+
 
 # Decrypt passwords.txt using XOR decryption
 def decrypt_passwords_file(key):
@@ -130,7 +134,6 @@ def decrypt_passwords_file(key):
     #
     with open(passwords_file, "w") as file:
         file.write(decrypted_data)
-
 
 
 def show_passwords():
@@ -200,7 +203,7 @@ elif args.showpass:
     show_passwords()
     encrypt_passwords_file()
 elif args.sel:
-    name = args.sel
+    name, key = args.sel
     decrypt_passwords_file(key)
     print('Related data: ')
     select_password(name)
