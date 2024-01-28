@@ -1,5 +1,7 @@
 # Step 1: Import necessary libraries
 import argparse
+import binascii
+
 from Crypto.Cipher import AES
 import base64
 import json
@@ -56,8 +58,19 @@ def decrypt(encrypted_text, key):
     return cipher.decrypt_and_verify(ciphertext, tag).decode()
 
 
+def custom_b64decode(data):
+    # Custom base64 decoding with error handling
+    try:
+        return base64.b64decode(data)
+    except binascii.Error:
+        # If there's an error, add padding to the string and try decoding again
+        padding = '=' * (4 - (len(data) % 4))
+        padded_data = data + padding
+        return base64.b64decode(padded_data)
+
+
 def xor_decrypt(data, key):
-    encrypted_bytes = base64.b64decode(data)
+    encrypted_bytes = custom_b64decode(data)
     key_bytes = key.encode()
 
     # Repeat the key to match the length of data
@@ -68,14 +81,17 @@ def xor_decrypt(data, key):
     decrypted_bytes = bytes(
         [encrypted_byte ^ key_byte for encrypted_byte, key_byte in zip(encrypted_bytes, repeated_key)])
 
-    # Decode the result to get the plaintext
-    decrypted_data = decrypted_bytes.decode()
+    # Decode the result to get the plaintext with error handling
+    decrypted_data = decrypted_bytes.decode(errors='replace')
 
     return decrypted_data
 
 
+
+
+
 # Step 4: Manage passwords
-passwords_file = "passwordsPlus.txt"
+passwords_file = "passwordsGui.txt"
 
 
 def generate_password(name, comment, key):
@@ -103,7 +119,7 @@ def save_password(name, comment, key):
 
 
 # Encrypt passwords.txt using XOR encryption
-def encrypt_passwords_file():
+def encrypt_passwords_file(key):
     with open(passwords_file, "r") as file:
         plaintext = file.read()
     encrypted_data = xor_encrypt(plaintext, key)
@@ -113,11 +129,11 @@ def encrypt_passwords_file():
 
 # Decrypt passwords.txt using XOR decryption
 def decrypt_passwords_file(key):
-    with open(passwords_file, "r") as file:
+    with open(passwords_file, "r", encoding='utf-8') as file:
         encrypted_data = file.read()
     decrypted_data = xor_decrypt(encrypted_data, key)
 
-    with open(passwords_file, "w") as file:
+    with open(passwords_file, "w", encoding='utf-8') as file:
         file.write(decrypted_data)
 
 
@@ -191,23 +207,23 @@ elif args.showpass:
     decrypt_passwords_file(key)
     print('Showing Passwords..')
     show_passwords()
-    encrypt_passwords_file()
+    encrypt_passwords_file(key)
 elif args.sel:
     name, key = args.sel
     decrypt_passwords_file(key)
     print('Related data: ')
     select_password(name)
-    encrypt_passwords_file()
+    encrypt_passwords_file(key)
 elif args.update:
     name, key = args.update
     decrypt_passwords_file(key)
     update_password(name)
-    encrypt_passwords_file()
+    encrypt_passwords_file(key)
 elif args.delete:
     name, key = args.delete
     decrypt_passwords_file(key)
     delete_password(name)
-    encrypt_passwords_file()
+    encrypt_passwords_file(key)
     print('Deleted Successfully!')
 else:
     print("Invalid command. Please use --help for usage information.")
