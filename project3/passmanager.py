@@ -17,7 +17,7 @@ parser = argparse.ArgumentParser(description="Password Manager")
 parser.add_argument("--newpass", help="Create a new password", nargs=3)
 parser.add_argument("--showpass", help="Show saved passwords")
 parser.add_argument("--sel", help="Select a password by name", nargs=2)
-parser.add_argument("--update", help="Update a password", nargs=1)
+parser.add_argument("--update", help="Update a password", nargs=2)
 parser.add_argument("--delete", help="Delete a password by name")
 args = parser.parse_args()
 
@@ -164,11 +164,13 @@ def update_password(name):
 
     for entry in entries:
         if entry["name"] == name:
+            print(f'Previous Password: {entry["password"]}')
             # Generate a new password for the existing entry
             new_generated_password = generate_password(entry["name"], entry["comment"], entry["key"])
 
             # Update the password field in the entry
             entry["password"] = new_generated_password
+            print(f'New Password: {entry["password"]}')
 
         updated_entries.append(entry)
 
@@ -209,7 +211,8 @@ elif args.sel:
     select_password(name)
     encrypt_passwords_file()
 elif args.update:
-    name = args.update[0]
+    name,key = args.update
+    decrypt_passwords_file(key)
     update_password(name)
     encrypt_passwords_file()
 elif args.delete:
